@@ -99,7 +99,7 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
           ← Back to decks
         </button>
 
-        <div className="rounded-3xl border border-line bg-white/60 p-8 shadow-sm">
+        <div className="rounded-3xl border border-line bg-paper-2/50 p-8 shadow-sm">
           <h2 className="font-display text-2xl font-bold text-ink">
             {deck.name}
           </h2>
@@ -172,7 +172,7 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
   if (done) {
     return (
       <div className="animate-rise mx-auto max-w-xl">
-        <div className="rounded-3xl border border-line bg-white/60 p-10 text-center shadow-sm">
+        <div className="rounded-3xl border border-line bg-paper-2/50 p-10 text-center shadow-sm">
           <p className="font-display text-3xl text-ink">Session complete</p>
           <p className="mt-3 text-ink-soft">
             <span className="text-accent-2">{stats.correct} correct</span>
@@ -225,7 +225,7 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
               className={`flex min-h-[14rem] flex-col items-center justify-center rounded-3xl border p-8 text-center shadow-sm transition ${
                 flipped
                   ? "border-accent-2/40 bg-accent-2/5"
-                  : "border-line bg-white/60"
+                  : "border-line bg-paper-2/50"
               }`}
             >
               <p className="text-xs uppercase tracking-widest text-ink-soft/50">
