@@ -311,10 +311,10 @@ function DeckRow({
         indent ? "" : "rounded-2xl border border-line bg-paper-2/50 shadow-sm"
       }
     >
-      <div className="flex items-center justify-between gap-3 p-4">
+      <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
         <button
           onClick={() => setOpen(isOpen ? null : deck.id)}
-          className="flex-1 text-left"
+          className="text-left sm:flex-1"
         >
           <h3 className="font-display text-xl text-ink">
             {label ?? deck.name}
@@ -333,7 +333,7 @@ function DeckRow({
           </p>
         </button>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           {editLimit ? (
             <div className="flex items-center gap-1">
               <input
@@ -369,7 +369,7 @@ function DeckRow({
                 setEditLimit(true);
               }}
               title="Set daily new-card limit"
-              className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-soft transition hover:border-accent hover:text-accent"
+              className="rounded-full border border-line px-3 py-2.5 text-sm text-ink-soft transition hover:border-accent hover:text-accent sm:py-1.5"
             >
               {deck.dailyLimit ? `${deck.dailyLimit}/day` : "Limit"}
             </button>
@@ -378,14 +378,14 @@ function DeckRow({
           <button
             onClick={() => onPractice(deck.id)}
             disabled={deck.cards.length === 0}
-            className="rounded-full bg-accent-2 px-3 py-1.5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-30"
+            className="rounded-full bg-accent-2 px-3 py-2.5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-30 sm:py-1.5"
           >
             Practice
           </button>
           <button
             onClick={() => downloadDeck(deck, exportOptions)}
             disabled={deck.cards.length === 0}
-            className="rounded-full border border-line px-3 py-1.5 text-sm transition hover:border-accent hover:text-accent disabled:opacity-30"
+            className="rounded-full border border-line px-3 py-2.5 text-sm transition hover:border-accent hover:text-accent disabled:opacity-30 sm:py-1.5"
           >
             Export
           </button>
@@ -393,7 +393,7 @@ function DeckRow({
             onClick={() => {
               if (confirm(`Delete "${deck.name}"?`)) onDeleteDeck(deck.id);
             }}
-            className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-soft transition hover:border-accent hover:text-accent"
+            className="rounded-full border border-line px-3 py-2.5 text-sm text-ink-soft transition hover:border-accent hover:text-accent sm:py-1.5"
           >
             Delete
           </button>

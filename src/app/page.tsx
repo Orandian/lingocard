@@ -28,10 +28,10 @@ export default function Home() {
   const practiceDeck = decks.find((d) => d.id === practiceId) ?? null;
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10">
-      <header className="mb-8 flex items-start justify-between gap-4">
+    <main className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+      <header className="mb-6 flex items-start justify-between gap-4 sm:mb-8">
         <div>
-          <h1 className="font-display text-4xl font-black tracking-tight text-ink">
+          <h1 className="font-display text-3xl font-black tracking-tight text-ink sm:text-4xl">
             Lingo<span className="text-accent">Card</span>
           </h1>
           <p className="mt-1 text-ink-soft">

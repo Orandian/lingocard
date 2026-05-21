@@ -99,7 +99,7 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
           ← Back to decks
         </button>
 
-        <div className="rounded-3xl border border-line bg-paper-2/50 p-8 shadow-sm">
+        <div className="rounded-3xl border border-line bg-paper-2/50 p-5 shadow-sm sm:p-8">
           <h2 className="font-display text-2xl font-bold text-ink">
             {deck.name}
           </h2>
@@ -172,8 +172,10 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
   if (done) {
     return (
       <div className="animate-rise mx-auto max-w-xl">
-        <div className="rounded-3xl border border-line bg-paper-2/50 p-10 text-center shadow-sm">
-          <p className="font-display text-3xl text-ink">Session complete</p>
+        <div className="rounded-3xl border border-line bg-paper-2/50 p-6 text-center shadow-sm sm:p-10">
+          <p className="font-display text-2xl text-ink sm:text-3xl">
+            Session complete
+          </p>
           <p className="mt-3 text-ink-soft">
             <span className="text-accent-2">{stats.correct} correct</span>
             {" · "}
@@ -222,7 +224,7 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
             className="block w-full"
           >
             <div
-              className={`flex min-h-[14rem] flex-col items-center justify-center rounded-3xl border p-8 text-center shadow-sm transition ${
+              className={`flex min-h-[10rem] flex-col items-center justify-center rounded-3xl border p-5 text-center shadow-sm transition sm:min-h-[14rem] sm:p-8 ${
                 flipped
                   ? "border-accent-2/40 bg-accent-2/5"
                   : "border-line bg-paper-2/50"
@@ -231,7 +233,7 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
               <p className="text-xs uppercase tracking-widest text-ink-soft/50">
                 {flipped ? "Answer" : "Prompt"}
               </p>
-              <p className="mt-3 font-display text-3xl leading-snug text-ink">
+              <p className="mt-3 font-display text-xl leading-snug text-ink sm:text-3xl">
                 {flipped ? card.back : card.front}
               </p>
               {flipped && card.examples.length > 0 && (

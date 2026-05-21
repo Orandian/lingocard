@@ -337,7 +337,7 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
         {/* ── Language tab bar ── */}
         <div className="flex items-stretch border-b border-line">
           {/* Source side */}
-          <div className="flex min-w-0 flex-1 items-stretch overflow-hidden">
+          <div className="flex min-w-0 flex-1 items-stretch overflow-x-auto">
             {/* "Detect language" tab always first */}
             <LangTab
               active={sourceLang === "auto"}
@@ -403,7 +403,7 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
           </button>
 
           {/* Target side */}
-          <div className="flex min-w-0 flex-1 items-stretch justify-end overflow-hidden">
+          <div className="flex min-w-0 flex-1 items-stretch justify-end overflow-x-auto">
             {/* 3 recent target tabs */}
             {targetTabs.map((code) => (
               <LangTab
@@ -444,9 +444,9 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
         </div>
 
         {/* ── Translation panels ── */}
-        <div className="flex min-h-[220px]">
+        <div className="flex flex-col sm:flex-row sm:min-h-[220px]">
           {/* Left / source panel */}
-          <div className="relative flex min-w-0 flex-1 flex-col border-r border-line bg-paper">
+          <div className="relative flex min-w-0 flex-1 flex-col border-b border-line bg-paper sm:border-b-0 sm:border-r">
             <textarea
               ref={textareaRef}
               value={text}
@@ -526,11 +526,11 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
               ) : error ? (
                 <p className="text-sm text-red-500">{error}</p>
               ) : result?.translation ? (
-                <p className="text-xl leading-relaxed text-accent">
+                <p className="text-lg leading-relaxed text-accent sm:text-xl">
                   {result.translation}
                 </p>
               ) : (
-                <p className="select-none text-xl text-ink-soft/40">
+                <p className="select-none text-lg text-ink-soft/40 sm:text-xl">
                   Translation
                 </p>
               )}
@@ -662,20 +662,20 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
 
       {/* ── Save-to-deck row — shown only when there is a translation result ── */}
       {hasTranslation && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 px-1">
+        <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-2 px-1">
           <span className="text-xs text-ink-soft/60">Save to deck:</span>
           {decks.map((d) => (
             <button
               key={d.id}
               onClick={() => save(d.id)}
-              className="rounded-full border border-line px-3 py-1 text-xs text-ink-soft transition-colors hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="rounded-full border border-line px-3 py-2 text-xs text-ink-soft transition-colors hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:py-1"
             >
               {d.name}
             </button>
           ))}
           <button
             onClick={saveToNew}
-            className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-white transition-colors hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-full bg-accent px-3 py-2 text-xs font-medium text-white transition-colors hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:py-1"
           >
             + New deck
           </button>
@@ -704,7 +704,7 @@ function LangTab({
   return (
     <button
       onClick={onClick}
-      className={`whitespace-nowrap px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent ${
+      className={`whitespace-nowrap px-2 py-2.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent sm:px-4 sm:py-3 sm:text-sm ${
         active
           ? "border-b-2 border-accent text-accent"
           : "border-b-2 border-transparent text-ink-soft hover:bg-paper-2 hover:text-ink"
@@ -886,7 +886,7 @@ function TranslationResultPanel({ result }: { result: TranslationResult }) {
                 <div className="space-y-2">
                   {entry.words.map((w, j) => (
                     <div key={j} className="flex items-start gap-3">
-                      <span className="min-w-[130px] text-sm font-medium text-accent">
+                      <span className="min-w-[80px] text-sm font-medium text-accent sm:min-w-[130px]">
                         {w.word}
                       </span>
                       {w.reverseTranslation.length > 0 && (
