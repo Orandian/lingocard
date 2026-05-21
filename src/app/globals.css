@@ -52,13 +52,15 @@
 
 /* ── Base ─────────────────────────────────────────────────────────────────── */
 
-button,
-[role="button"] {
-  cursor: pointer;
-}
+@layer base {
+  button,
+  [role="button"] {
+    @apply cursor-pointer;
+  }
 
-button:disabled {
-  cursor: not-allowed;
+  button:disabled {
+    @apply cursor-not-allowed;
+  }
 }
 
 html,
