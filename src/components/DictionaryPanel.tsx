@@ -2,39 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { DictionaryEntry } from "@/types";
-
-const LANG_MAP: Record<string, string> = {
-  en: "en-US",
-  ja: "ja-JP",
-  zh: "zh-CN",
-  "zh-TW": "zh-TW",
-  ko: "ko-KR",
-  es: "es-ES",
-  fr: "fr-FR",
-  de: "de-DE",
-  it: "it-IT",
-  pt: "pt-PT",
-  ru: "ru-RU",
-  ar: "ar-SA",
-  hi: "hi-IN",
-  th: "th-TH",
-  vi: "vi-VN",
-  id: "id-ID",
-  my: "my-MM",
-  ms: "ms-MY",
-  tr: "tr-TR",
-  pl: "pl-PL",
-  nl: "nl-NL",
-  sv: "sv-SE",
-  da: "da-DK",
-  fi: "fi-FI",
-  no: "no-NO",
-  uk: "uk-UA",
-  cs: "cs-CZ",
-  ro: "ro-RO",
-  hu: "hu-HU",
-  el: "el-GR",
-};
+import { speak } from "@/lib/tts";
 
 type TabId = "definitions" | "examples" | "translations";
 
@@ -76,13 +44,7 @@ export default function DictionaryPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entry]);
 
-  const speak = () => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(headword);
-    utter.lang = LANG_MAP[sourceLang] ?? sourceLang;
-    window.speechSynthesis.speak(utter);
-  };
+  const handleSpeak = () => speak(headword, sourceLang);
 
   const tabs: { id: TabId; label: string; has: boolean }[] = [
     { id: "definitions", label: "Definitions", has: hasDefinitions },
@@ -108,7 +70,7 @@ export default function DictionaryPanel({
               {headword}
             </h2>
             <button
-              onClick={speak}
+              onClick={handleSpeak}
               aria-label={`Listen to pronunciation of ${headword}`}
               title="Listen to pronunciation"
               className="flex-shrink-0 rounded-full p-1 text-ink-soft/60 transition-colors hover:bg-paper-2 hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"

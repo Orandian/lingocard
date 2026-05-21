@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { LANGUAGES, langName } from "@/lib/languages";
 import { translate } from "@/lib/translate";
 import { getDictionary } from "@/lib/dictionary";
+import { speak } from "@/lib/tts";
 import {
   TranslationResult,
   Deck,
@@ -198,14 +199,7 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const speak = (words: string, lang: string) => {
-    if (!words || typeof window === "undefined" || !window.speechSynthesis)
-      return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(words);
-    utter.lang = LANG_MAP[lang] ?? lang;
-    window.speechSynthesis.speak(utter);
-  };
+  // speak is imported from @/lib/tts (Google TTS proxy, not SpeechSynthesis)
 
   const toggleListening = () => {
     if (isListening) {
