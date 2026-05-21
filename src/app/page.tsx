@@ -86,6 +86,18 @@ export default function Home() {
       <footer className="mt-16 border-t border-line pt-5 text-center text-xs text-ink-soft/60">
         Runs locally · data saved in your browser · translation via Google
         Translate
+        <br />
+        <span className="mt-1 inline-block">
+          Made with ♥ by{" "}
+          <a
+            href="https://yannainghtwe.xilanova.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent underline-offset-2 hover:underline"
+          >
+            Yan Naing Htwe
+          </a>
+        </span>
       </footer>
     </main>
   );
