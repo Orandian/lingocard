@@ -100,7 +100,7 @@ export default function DeckManager({
             }
           }}
           placeholder="New deck name… (use :: for subdecks)"
-          className="flex-1 rounded-full border border-line bg-paper-2/60 px-4 py-2 outline-none focus:border-accent"
+          className="flex-1 rounded-full border border-line bg-paper-2 px-4 py-2 outline-none focus:border-accent"
         />
         <button
           onClick={() => {
@@ -117,7 +117,7 @@ export default function DeckManager({
 
       {/* Export options */}
       {decks.length > 0 && (
-        <div className="mb-5 flex flex-wrap items-center gap-4 rounded-xl border border-line bg-paper-2/60 px-4 py-3 text-sm">
+        <div className="mb-5 flex flex-wrap items-center gap-4 rounded-xl border border-line bg-paper-2 px-4 py-3 text-sm">
           <span className="font-medium text-ink-soft">Export options:</span>
           <label className="flex cursor-pointer items-center gap-2 text-ink-soft">
             <input
@@ -145,7 +145,7 @@ export default function DeckManager({
       )}
 
       {decks.length === 0 && (
-        <p className="rounded-2xl border border-dashed border-line bg-paper-2/40 p-8 text-center text-ink-soft">
+        <p className="rounded-2xl border border-dashed border-line bg-paper-2 p-8 text-center text-ink-soft">
           No decks yet. Translate something and save it, or create a deck above.
         </p>
       )}
@@ -167,7 +167,7 @@ export default function DeckManager({
           ) : (
             <div
               key={item.parent}
-              className="rounded-2xl border border-line bg-paper-2/40 shadow-sm"
+              className="rounded-2xl border border-line bg-paper-2 shadow-sm"
             >
               <div className="border-b border-line/50 px-4 py-3">
                 <h3 className="font-display text-lg font-semibold text-ink">
@@ -308,7 +308,7 @@ function DeckRow({
   return (
     <div
       className={
-        indent ? "" : "rounded-2xl border border-line bg-paper-2/50 shadow-sm"
+        indent ? "" : "rounded-2xl border border-line bg-paper shadow-sm"
       }
     >
       <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -351,7 +351,7 @@ function DeckRow({
               />
               <button
                 onClick={commitLimit}
-                className="rounded-full bg-accent-2 px-2 py-1 text-xs text-white"
+                className="rounded-full bg-accent-2 px-2 py-1 text-xs text-paper"
               >
                 ✓
               </button>
@@ -378,7 +378,7 @@ function DeckRow({
           <button
             onClick={() => onPractice(deck.id)}
             disabled={deck.cards.length === 0}
-            className="rounded-full bg-accent-2 px-3 py-2.5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-30 sm:py-1.5"
+            className="rounded-full bg-accent-2 px-3 py-2.5 text-sm font-medium text-paper transition hover:opacity-90 disabled:opacity-30 sm:py-1.5"
           >
             Practice
           </button>

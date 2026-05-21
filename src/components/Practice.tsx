@@ -99,7 +99,7 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
           ← Back to decks
         </button>
 
-        <div className="rounded-3xl border border-line bg-paper-2/50 p-5 shadow-sm sm:p-8">
+        <div className="rounded-3xl border border-line bg-paper-2 p-5 shadow-sm sm:p-8">
           <h2 className="font-display text-2xl font-bold text-ink">
             {deck.name}
           </h2>
@@ -172,7 +172,7 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
   if (done) {
     return (
       <div className="animate-rise mx-auto max-w-xl">
-        <div className="rounded-3xl border border-line bg-paper-2/50 p-6 text-center shadow-sm sm:p-10">
+        <div className="rounded-3xl border border-line bg-paper-2 p-6 text-center shadow-sm sm:p-10">
           <p className="font-display text-2xl text-ink sm:text-3xl">
             Session complete
           </p>
@@ -227,7 +227,7 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
               className={`flex min-h-[10rem] flex-col items-center justify-center rounded-3xl border p-5 text-center shadow-sm transition sm:min-h-[14rem] sm:p-8 ${
                 flipped
                   ? "border-accent-2/40 bg-accent-2/5"
-                  : "border-line bg-paper-2/50"
+                  : "border-line bg-paper-2"
               }`}
             >
               <p className="text-xs uppercase tracking-widest text-ink-soft/50">
@@ -267,7 +267,7 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
               </button>
               <button
                 onClick={() => grade(true)}
-                className="flex-1 rounded-full bg-accent-2 py-3 font-medium text-white transition hover:opacity-90"
+                className="flex-1 rounded-full bg-accent-2 py-3 font-medium text-paper transition hover:opacity-90"
               >
                 Got it right
               </button>
