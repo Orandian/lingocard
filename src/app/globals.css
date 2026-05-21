@@ -1,85 +1,66 @@
 @import "tailwindcss";
 
-/* ── Theme tokens ─────────────────────────────────────────────────────────── */
-
-/* Warm (default / fallback) */
-:root,
-[data-theme="warm"] {
-  --paper: #f4efe6;
-  --paper-2: #ece4d6;
-  --ink: #1c1a17;
-  --ink-soft: #4a443c;
-  --accent: #c2410c;
-  --accent-2: #15803d;
-  --line: #d8cdba;
-  --surface: rgba(255 255 255 / 0.45);
-  --surface-2: rgba(255 255 255 / 0.30);
-}
-
-/* Dark — Gruvbox-warm */
-[data-theme="dark"] {
-  --paper: #1c1917;
-  --paper-2: #292524;
-  --ink: #f5ede8;
-  --ink-soft: #a89887;
-  --accent: #fb923c;
-  --accent-2: #86efac;
-  --line: #44403c;
-  --surface: rgba(255 255 255 / 0.05);
-  --surface-2: rgba(255 255 255 / 0.03);
-}
-
-/* Nord — icy dark */
-[data-theme="nord"] {
-  --paper: #2e3440;
-  --paper-2: #3b4252;
-  --ink: #eceff4;
-  --ink-soft: #9099a8;
-  --accent: #88c0d0;
-  --accent-2: #a3be8c;
-  --line: #4c566a;
-  --surface: rgba(255 255 255 / 0.06);
-  --surface-2: rgba(255 255 255 / 0.04);
-}
-
-/* Slate — cool light */
-[data-theme="slate"] {
-  --paper: #f0f4f9;
-  --paper-2: #e2eaf3;
-  --ink: #1e293b;
-  --ink-soft: #64748b;
-  --accent: #0284c7;
-  --accent-2: #059669;
-  --line: #cbd5e1;
-  --surface: rgba(255 255 255 / 0.55);
-  --surface-2: rgba(255 255 255 / 0.40);
-}
-
-/* ── Tailwind color tokens ─────────────────────────────────────────────────── */
-
-@theme inline {
-  --color-paper: var(--paper);
-  --color-paper-2: var(--paper-2);
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-accent: var(--accent);
-  --color-accent-2: var(--accent-2);
-  --color-line: var(--line);
+/* ── Default (Warm) — Tailwind registers these as runtime CSS vars ────────── */
+@theme {
+  --color-paper:    #f4efe6;
+  --color-paper-2:  #ece4d6;
+  --color-ink:      #1c1a17;
+  --color-ink-soft: #4a443c;
+  --color-accent:   #c2410c;
+  --color-accent-2: #15803d;
+  --color-line:     #d8cdba;
   --font-display: "Fraunces", Georgia, serif;
   --font-body: "Spline Sans", system-ui, sans-serif;
+}
+
+/* ── Theme overrides ──────────────────────────────────────────────────────────
+   These are UNLAYERED so they beat Tailwind's @layer theme regardless of
+   specificity. Setting them on the html element (via data-theme) means every
+   descendant inherits the new values — Tailwind utilities like bg-paper use
+   var(--color-paper) at runtime, so they update instantly.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+[data-theme="dark"] {
+  --color-paper:    #1c1917;
+  --color-paper-2:  #292524;
+  --color-ink:      #f5ede8;
+  --color-ink-soft: #a89887;
+  --color-accent:   #fb923c;
+  --color-accent-2: #86efac;
+  --color-line:     #44403c;
+}
+
+[data-theme="nord"] {
+  --color-paper:    #2e3440;
+  --color-paper-2:  #3b4252;
+  --color-ink:      #eceff4;
+  --color-ink-soft: #9099a8;
+  --color-accent:   #88c0d0;
+  --color-accent-2: #a3be8c;
+  --color-line:     #4c566a;
+}
+
+[data-theme="slate"] {
+  --color-paper:    #f0f4f9;
+  --color-paper-2:  #e2eaf3;
+  --color-ink:      #1e293b;
+  --color-ink-soft: #64748b;
+  --color-accent:   #0284c7;
+  --color-accent-2: #059669;
+  --color-line:     #cbd5e1;
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────────── */
 
 html,
 body {
-  background-color: var(--paper);
-  color: var(--ink);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
   font-family: var(--font-body);
   transition: background-color 0.25s ease, color 0.15s ease;
 }
 
-/* Subtle grain overlay — adapts automatically via var(--line) */
+/* Grain texture — adapts via --color-line */
 body::before {
   content: "";
   position: fixed;
@@ -87,7 +68,7 @@ body::before {
   pointer-events: none;
   z-index: 0;
   opacity: 0.35;
-  background-image: radial-gradient(var(--line) 0.5px, transparent 0.5px);
+  background-image: radial-gradient(var(--color-line) 0.5px, transparent 0.5px);
   background-size: 6px 6px;
 }
 
