@@ -290,14 +290,18 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
       return;
     }
     setDictOpen(true);
-    const cacheKey = `${text}|${sourceLang}|${targetLang}`;
+    // Resolve "auto" to the detected language so the API route gets the real
+    // source language and looks up the correct dictionary (e.g. ja → Jisho).
+    const resolvedSource =
+      sourceLang === "auto" ? (result?.detectedLang ?? "en") : sourceLang;
+    const cacheKey = `${text}|${resolvedSource}|${targetLang}`;
     if (dictCache[cacheKey]) {
       setDictEntry(dictCache[cacheKey]);
       return;
     }
     setDictLoading(true);
     try {
-      const entry = await getDictionary(text, sourceLang, targetLang);
+      const entry = await getDictionary(text, resolvedSource, targetLang);
       setDictCache((prev) => ({ ...prev, [cacheKey]: entry }));
       setDictEntry(entry);
     } finally {
