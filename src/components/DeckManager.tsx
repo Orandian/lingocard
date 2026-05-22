@@ -6,6 +6,16 @@ import { langName } from "@/lib/languages";
 import { downloadDeck, ExportOptions } from "@/lib/anki";
 import { dueCards, newCards } from "@/store/useDecks";
 import DeckStats from "@/components/DeckStats";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const DECKS_PER_PAGE = 8;
 const CARDS_PER_PAGE = 10;
@@ -56,6 +66,11 @@ export default function DeckManager({
   onPractice,
 }: Props) {
   const [newName, setNewName] = useState("");
+  const [nameError, setNameError] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const [statsFor, setStatsFor] = useState<string | null>(null);
   const [deckPage, setDeckPage] = useState(0);
@@ -89,31 +104,51 @@ export default function DeckManager({
 
   return (
     <div className="animate-rise">
-      {/* New deck input */}
-      <div className="mb-5 flex gap-2">
-        <input
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && newName.trim()) {
+      {/* New deck input with validation */}
+      <div className="mb-5">
+        <div className="flex gap-2">
+          <input
+            value={newName}
+            onChange={(e) => {
+              setNewName(e.target.value);
+              if (e.target.value.trim()) setNameError(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter") return;
+              if (!newName.trim()) {
+                setNameError(true);
+                return;
+              }
               onCreateDeck(newName);
               setNewName("");
-            }
-          }}
-          placeholder="New deck name… (use :: for subdecks)"
-          className="flex-1 rounded-full border border-line bg-paper-2 px-4 py-2 outline-none focus:border-accent"
-        />
-        <button
-          onClick={() => {
-            if (newName.trim()) {
+              setNameError(false);
+            }}
+            placeholder="New deck name… (use :: for subdecks)"
+            aria-invalid={nameError}
+            className={`flex-1 rounded-full border bg-paper-2 px-4 py-2 outline-none transition focus:border-accent ${
+              nameError ? "border-red-400 focus:border-red-400" : "border-line"
+            }`}
+          />
+          <button
+            onClick={() => {
+              if (!newName.trim()) {
+                setNameError(true);
+                return;
+              }
               onCreateDeck(newName);
               setNewName("");
-            }
-          }}
-          className="rounded-full bg-ink px-5 py-2 text-sm font-medium text-paper transition hover:bg-accent"
-        >
-          Create
-        </button>
+              setNameError(false);
+            }}
+            className="rounded-full bg-ink px-5 py-2 text-sm font-medium text-paper transition hover:bg-accent"
+          >
+            Create
+          </button>
+        </div>
+        {nameError && (
+          <p className="mt-1.5 pl-4 text-xs text-red-500" role="alert">
+            Please enter a deck name.
+          </p>
+        )}
       </div>
 
       {/* Export options */}
@@ -164,6 +199,7 @@ export default function DeckManager({
                 setStatsFor={setStatsFor}
                 exportOptions={exportOptions}
                 onDeleteDeck={onDeleteDeck}
+                onRequestDelete={(id, name) => setPendingDelete({ id, name })}
                 onDeleteCard={onDeleteCard}
                 onSetLimit={onSetLimit}
                 onPractice={onPractice}
@@ -197,6 +233,9 @@ export default function DeckManager({
                     setStatsFor={setStatsFor}
                     exportOptions={exportOptions}
                     onDeleteDeck={onDeleteDeck}
+                    onRequestDelete={(id, name) =>
+                      setPendingDelete({ id, name })
+                    }
                     onDeleteCard={onDeleteCard}
                     onSetLimit={onSetLimit}
                     onPractice={onPractice}
@@ -218,6 +257,49 @@ export default function DeckManager({
           className="mt-5"
         />
       )}
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+      >
+        <AlertDialogContent className="bg-paper text-ink ring-line">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-ink">
+              Delete deck?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-ink-soft">
+              <strong className="text-ink">
+                &ldquo;{pendingDelete?.name}&rdquo;
+              </strong>{" "}
+              and all its cards will be permanently removed. This cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => setPendingDelete(null)}
+              className="rounded-full border-line bg-paper text-ink-soft hover:bg-paper-2 hover:text-ink"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingDelete) {
+                  onDeleteDeck(pendingDelete.id);
+                  setPendingDelete(null);
+                }
+              }}
+              variant="destructive"
+              className="rounded-full"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -272,6 +354,7 @@ interface DeckRowProps {
   setStatsFor: (id: string | null) => void;
   exportOptions: ExportOptions;
   onDeleteDeck: (id: string) => void;
+  onRequestDelete: (id: string, name: string) => void;
   onDeleteCard: (deckId: string, cardId: string) => void;
   onSetLimit: (deckId: string, limit: number | undefined) => void;
   onPractice: (deckId: string) => void;
@@ -288,6 +371,7 @@ function DeckRow({
   setStatsFor,
   exportOptions,
   onDeleteDeck,
+  onRequestDelete,
   onDeleteCard,
   onSetLimit,
   onPractice,
@@ -410,10 +494,8 @@ function DeckRow({
             Export
           </button>
           <button
-            onClick={() => {
-              if (confirm(`Delete "${deck.name}"?`)) onDeleteDeck(deck.id);
-            }}
-            className="rounded-full border border-line px-3 py-2.5 text-sm text-ink-soft transition hover:border-accent hover:text-accent sm:py-1.5"
+            onClick={() => onRequestDelete(deck.id, label ?? deck.name)}
+            className="rounded-full border border-line px-3 py-2.5 text-sm text-ink-soft transition hover:border-red-400 hover:text-red-500 sm:py-1.5"
           >
             Delete
           </button>
