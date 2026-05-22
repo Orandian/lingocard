@@ -328,11 +328,92 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
         className="overflow-hidden rounded-2xl border border-line bg-paper shadow-sm"
         onClick={closeAllPickers}
       >
-        {/* ── Language tab bar ── */}
-        <div className="flex items-stretch border-b border-line">
+        {/* ── Language bar ── */}
+
+        {/* Mobile: two compact buttons + swap (fits any screen width) */}
+        <div className="flex items-stretch border-b border-line sm:hidden">
+          <div
+            className="relative min-w-0 flex-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => {
+                setShowSourcePicker((v) => !v);
+                setShowTargetPicker(false);
+              }}
+              className="flex w-full items-center justify-between gap-1 px-3 py-3 text-left text-sm font-medium text-ink"
+            >
+              <span className="truncate">
+                {sourceLang === "auto"
+                  ? detectedName
+                    ? `${detectedName} ·det`
+                    : "Detect"
+                  : langName(sourceLang)}
+              </span>
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4 shrink-0 fill-current text-ink-soft"
+              >
+                <path d="M7 10l5 5 5-5z" />
+              </svg>
+            </button>
+            {showSourcePicker && (
+              <LangPicker
+                exclude={["auto"]}
+                selected={sourceLang}
+                onSelect={selectSource}
+              />
+            )}
+          </div>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              swap();
+            }}
+            disabled={sourceLang === "auto"}
+            title="Swap languages"
+            aria-label="Swap languages"
+            className="shrink-0 border-x border-line px-3 text-ink-soft/60 transition-colors hover:text-accent disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
+              <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" />
+            </svg>
+          </button>
+
+          <div
+            className="relative min-w-0 flex-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => {
+                setShowTargetPicker((v) => !v);
+                setShowSourcePicker(false);
+              }}
+              className="flex w-full items-center justify-between gap-1 px-3 py-3 text-left text-sm font-medium text-ink"
+            >
+              <span className="truncate">{langName(targetLang)}</span>
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4 shrink-0 fill-current text-ink-soft"
+              >
+                <path d="M7 10l5 5 5-5z" />
+              </svg>
+            </button>
+            {showTargetPicker && (
+              <LangPicker
+                selected={targetLang}
+                onSelect={selectTarget}
+                alignRight
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Desktop: full tab strip */}
+        <div className="hidden items-stretch border-b border-line sm:flex">
           {/* Source side */}
           <div className="flex min-w-0 flex-1 items-stretch overflow-x-auto">
-            {/* "Detect language" tab always first */}
             <LangTab
               active={sourceLang === "auto"}
               onClick={() => selectSource("auto")}
@@ -341,8 +422,6 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
                 ? `${detectedName} – detected`
                 : "Detect language"}
             </LangTab>
-
-            {/* 3 recent source tabs */}
             {sourceTabs.map((code) => (
               <LangTab
                 key={code}
@@ -352,8 +431,6 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
                 {langName(code)}
               </LangTab>
             ))}
-
-            {/* Source ▾ more picker */}
             <div
               className="relative flex-shrink-0"
               onClick={(e) => e.stopPropagation()}
@@ -380,7 +457,7 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
             </div>
           </div>
 
-          {/* ── Swap button ── */}
+          {/* Swap */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -398,7 +475,6 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
 
           {/* Target side */}
           <div className="flex min-w-0 flex-1 items-stretch justify-end overflow-x-auto">
-            {/* 3 recent target tabs */}
             {targetTabs.map((code) => (
               <LangTab
                 key={code}
@@ -408,8 +484,6 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
                 {langName(code)}
               </LangTab>
             ))}
-
-            {/* Target ▾ more picker */}
             <div
               className="relative flex-shrink-0"
               onClick={(e) => e.stopPropagation()}
