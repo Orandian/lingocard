@@ -5,6 +5,7 @@ import { Deck } from "@/types";
 import { langName } from "@/lib/languages";
 import { downloadDeck, ExportOptions } from "@/lib/anki";
 import { dueCards, newCards } from "@/store/useDecks";
+import DeckStats from "@/components/DeckStats";
 
 const DECKS_PER_PAGE = 8;
 const CARDS_PER_PAGE = 10;
@@ -56,6 +57,7 @@ export default function DeckManager({
 }: Props) {
   const [newName, setNewName] = useState("");
   const [open, setOpen] = useState<string | null>(null);
+  const [statsFor, setStatsFor] = useState<string | null>(null);
   const [deckPage, setDeckPage] = useState(0);
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     tags: true,
@@ -81,7 +83,6 @@ export default function DeckManager({
     (deckPage + 1) * DECKS_PER_PAGE,
   );
 
-  // Reset to page 0 when deck list changes length
   useEffect(() => {
     setDeckPage((p) => Math.min(p, Math.max(0, totalDeckPages - 1)));
   }, [totalDeckPages]);
@@ -127,7 +128,7 @@ export default function DeckManager({
               className="accent-accent"
             />
             Add tags
-            <code className="rounded bg-paper-2 px-1.5 py-0.5 text-xs">
+            <code className="rounded bg-paper px-1.5 py-0.5 text-xs">
               lingocard::en-ja
             </code>
           </label>
@@ -153,17 +154,21 @@ export default function DeckManager({
       <div className="space-y-4">
         {visibleItems.map((item) =>
           item.type === "standalone" ? (
-            <DeckRow
-              key={item.deck.id}
-              deck={item.deck}
-              open={open}
-              setOpen={setOpen}
-              exportOptions={exportOptions}
-              onDeleteDeck={onDeleteDeck}
-              onDeleteCard={onDeleteCard}
-              onSetLimit={onSetLimit}
-              onPractice={onPractice}
-            />
+            <div key={item.deck.id}>
+              <DeckRow
+                deck={item.deck}
+                allDecks={decks}
+                open={open}
+                setOpen={setOpen}
+                statsFor={statsFor}
+                setStatsFor={setStatsFor}
+                exportOptions={exportOptions}
+                onDeleteDeck={onDeleteDeck}
+                onDeleteCard={onDeleteCard}
+                onSetLimit={onSetLimit}
+                onPractice={onPractice}
+              />
+            </div>
           ) : (
             <div
               key={item.parent}
@@ -184,9 +189,12 @@ export default function DeckManager({
                   <DeckRow
                     key={deck.id}
                     deck={deck}
+                    allDecks={decks}
                     label={subdeckLabel(deck.name)}
                     open={open}
                     setOpen={setOpen}
+                    statsFor={statsFor}
+                    setStatsFor={setStatsFor}
                     exportOptions={exportOptions}
                     onDeleteDeck={onDeleteDeck}
                     onDeleteCard={onDeleteCard}
@@ -201,7 +209,6 @@ export default function DeckManager({
         )}
       </div>
 
-      {/* Deck pagination */}
       {totalDeckPages > 1 && (
         <Pagination
           page={deckPage}
@@ -215,7 +222,7 @@ export default function DeckManager({
   );
 }
 
-// ── Pagination control ────────────────────────────────────────────────────────
+// ── Pagination ────────────────────────────────────────────────────────────────
 
 function Pagination({
   page,
@@ -235,7 +242,7 @@ function Pagination({
       <button
         onClick={onPrev}
         disabled={page === 0}
-        className="rounded-full border border-line px-4 py-1.5 text-sm text-ink-soft transition hover:border-accent hover:text-accent disabled:opacity-30 disabled:cursor-default"
+        className="rounded-full border border-line px-4 py-1.5 text-sm text-ink-soft transition hover:border-accent hover:text-accent disabled:cursor-default disabled:opacity-30"
       >
         ← Prev
       </button>
@@ -245,7 +252,7 @@ function Pagination({
       <button
         onClick={onNext}
         disabled={page >= total - 1}
-        className="rounded-full border border-line px-4 py-1.5 text-sm text-ink-soft transition hover:border-accent hover:text-accent disabled:opacity-30 disabled:cursor-default"
+        className="rounded-full border border-line px-4 py-1.5 text-sm text-ink-soft transition hover:border-accent hover:text-accent disabled:cursor-default disabled:opacity-30"
       >
         Next →
       </button>
@@ -257,9 +264,12 @@ function Pagination({
 
 interface DeckRowProps {
   deck: Deck;
+  allDecks: Deck[];
   label?: string;
   open: string | null;
   setOpen: (id: string | null) => void;
+  statsFor: string | null;
+  setStatsFor: (id: string | null) => void;
   exportOptions: ExportOptions;
   onDeleteDeck: (id: string) => void;
   onDeleteCard: (deckId: string, cardId: string) => void;
@@ -270,9 +280,12 @@ interface DeckRowProps {
 
 function DeckRow({
   deck,
+  allDecks,
   label,
   open,
   setOpen,
+  statsFor,
+  setStatsFor,
   exportOptions,
   onDeleteDeck,
   onDeleteCard,
@@ -285,6 +298,7 @@ function DeckRow({
   const [cardPage, setCardPage] = useState(0);
 
   const isOpen = open === deck.id;
+  const showStats = statsFor === deck.id;
   const due = dueCards(deck).length;
   const fresh = newCards(deck).length;
 
@@ -294,7 +308,6 @@ function DeckRow({
     (cardPage + 1) * CARDS_PER_PAGE,
   );
 
-  // Reset card page when deck is collapsed
   useEffect(() => {
     if (!isOpen) setCardPage(0);
   }, [isOpen]);
@@ -325,9 +338,9 @@ function DeckRow({
             {fresh > 0 && (
               <span className="ml-1 text-ink-soft/60">· {fresh} new</span>
             )}
-            {deck.dailyLimit && (
+            {deck.config.newPerDay !== 20 && (
               <span className="ml-1 text-ink-soft/50">
-                · limit {deck.dailyLimit}/day
+                · {deck.config.newPerDay}/day
               </span>
             )}
           </p>
@@ -376,6 +389,13 @@ function DeckRow({
           )}
 
           <button
+            onClick={() => setStatsFor(showStats ? null : deck.id)}
+            className={`rounded-full border px-3 py-2.5 text-sm transition sm:py-1.5 ${showStats ? "border-accent text-accent" : "border-line text-ink-soft hover:border-accent hover:text-accent"}`}
+          >
+            Stats
+          </button>
+
+          <button
             onClick={() => onPractice(deck.id)}
             disabled={deck.cards.length === 0}
             className="rounded-full bg-accent-2 px-3 py-2.5 text-sm font-medium text-paper transition hover:opacity-90 disabled:opacity-30 sm:py-1.5"
@@ -400,6 +420,18 @@ function DeckRow({
         </div>
       </div>
 
+      {/* Stats panel */}
+      {showStats && (
+        <div className="border-t border-line/50 px-4 pb-4">
+          <DeckStats
+            deck={deck}
+            allDecks={allDecks}
+            onClose={() => setStatsFor(null)}
+          />
+        </div>
+      )}
+
+      {/* Card list */}
       {isOpen && deck.cards.length > 0 && (
         <div className="border-t border-line">
           <ul>
@@ -418,7 +450,8 @@ function DeckRow({
                     {langName(card.sourceLang)} → {langName(card.targetLang)}
                     {card.examples.length > 0 &&
                       ` · ${card.examples.length} example${card.examples.length !== 1 ? "s" : ""}`}
-                    {` · box ${card.box}`}
+                    {` · ${card.state}`}
+                    {card.state === "review" && ` · ${card.interval}d`}
                   </p>
                 </div>
                 <button
@@ -430,8 +463,6 @@ function DeckRow({
               </li>
             ))}
           </ul>
-
-          {/* Card pagination */}
           {totalCardPages > 1 && (
             <div className="border-t border-line/50 px-4 py-3">
               <Pagination

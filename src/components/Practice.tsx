@@ -1,64 +1,67 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Deck, Card } from "@/types";
-import { dueCards, newCards } from "@/store/useDecks";
+import { Deck } from "@/types";
+import { Grade, sm2 } from "@/lib/scheduler";
+import { buildQueue, QueueItem } from "@/lib/queue";
 
 interface Props {
   deck: Deck;
-  onGrade: (deckId: string, cardId: string, correct: boolean) => void;
+  allDecks: Deck[]; // needed for subdeck roll-up + parent limit resolution
+  onGrade: (deckId: string, cardId: string, grade: Grade) => void;
   onExit: () => void;
 }
 
-type BoxFilter = "all" | "due" | "box1" | "box1-2";
+const GRADE_CONFIG: { grade: Grade; label: string; className: string }[] = [
+  {
+    grade: "again",
+    label: "Again",
+    className:
+      "rounded-full border border-accent bg-accent/10 py-3 font-medium text-accent transition hover:bg-accent/20",
+  },
+  {
+    grade: "hard",
+    label: "Hard",
+    className:
+      "rounded-full border border-line bg-paper-2 py-3 font-medium text-ink-soft transition hover:border-accent hover:text-accent",
+  },
+  {
+    grade: "good",
+    label: "Good",
+    className:
+      "rounded-full bg-accent-2 py-3 font-medium text-paper transition hover:opacity-90",
+  },
+  {
+    grade: "easy",
+    label: "Easy",
+    className:
+      "rounded-full border border-accent-2 bg-accent-2/10 py-3 font-medium text-accent-2 transition hover:bg-accent-2/20",
+  },
+];
 
-const BOX_FILTER_LABELS: Record<BoxFilter, string> = {
-  all: "All cards",
-  due: "Due only",
-  box1: "Box 1 (struggling)",
-  "box1-2": "Box 1–2",
-};
-
-export default function Practice({ deck, onGrade, onExit }: Props) {
+export default function Practice({ deck, allDecks, onGrade, onExit }: Props) {
   const [phase, setPhase] = useState<"setup" | "playing">("setup");
-  const [boxFilter, setBoxFilter] = useState<BoxFilter>("due");
-  const [sessionLimit, setSessionLimit] = useState<number>(
-    deck.dailyLimit ?? 20,
+  const now = Date.now();
+
+  // All decks in this practice scope: the primary deck + all subdecks
+  const practiceDecks = useMemo(
+    () =>
+      allDecks.filter(
+        (d) => d.id === deck.id || d.name.startsWith(deck.name + "::"),
+      ),
+    [deck, allDecks],
   );
 
-  const due = dueCards(deck);
-  const fresh = newCards(deck);
-
-  // Build the queue only when the session starts
-  const queue = useMemo(() => {
-    if (phase !== "playing") return [];
-
-    let pool: Card[];
-    switch (boxFilter) {
-      case "due":
-        pool = due.length > 0 ? due : deck.cards;
-        break;
-      case "box1":
-        pool = deck.cards.filter((c) => c.box === 1);
-        break;
-      case "box1-2":
-        pool = deck.cards.filter((c) => c.box <= 2);
-        break;
-      default:
-        pool = deck.cards;
-    }
-
-    // Cap new (never-reviewed) cards at the session limit
-    const seenIds = new Set(due.map((c) => c.id));
-    const seenCards = pool.filter((c) => seenIds.has(c.id));
-    const unseenCards = pool.filter((c) => !seenIds.has(c.id));
-    const limitedUnseen = unseenCards.slice(0, sessionLimit);
-    const combined =
-      boxFilter === "all"
-        ? pool.slice(0, sessionLimit)
-        : [...seenCards, ...limitedUnseen];
-
-    return [...combined].sort(() => Math.random() - 0.5).map((c) => c.id);
+  // Queue is built once when the session starts
+  const queueResult = useMemo(() => {
+    if (phase !== "playing")
+      return {
+        items: [] as QueueItem[],
+        newCount: 0,
+        learningCount: 0,
+        reviewCount: 0,
+      };
+    return buildQueue(practiceDecks, allDecks, now);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
@@ -66,16 +69,41 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
   const [flipped, setFlipped] = useState(false);
   const [stats, setStats] = useState({ correct: 0, wrong: 0 });
 
-  const currentId = queue[idx];
-  const card = deck.cards.find((c) => c.id === currentId);
+  const queue = queueResult.items;
+  const currentItem: QueueItem | undefined = queue[idx];
+  // Always look up card from allDecks in case state mutated since session start
+  const currentCard = currentItem
+    ? allDecks
+        .find((d) => d.id === currentItem.deckId)
+        ?.cards.find((c) => c.id === currentItem.card.id)
+    : undefined;
   const done = phase === "playing" && idx >= queue.length;
 
-  const grade = (correct: boolean) => {
-    if (!card) return;
-    onGrade(deck.id, card.id, correct);
+  // Remaining counts in session (rough — based on initial queue)
+  const remaining = {
+    new: Math.max(
+      0,
+      queueResult.newCount -
+        queue
+          .slice(0, idx)
+          .filter(
+            (i) =>
+              practiceDecks
+                .find((d) => d.id === i.deckId)
+                ?.cards.find((c) => c.id === i.card.id)?.state === "new" ||
+              i.card.state === "new",
+          ).length,
+    ),
+    learning: queueResult.learningCount,
+    review: queueResult.reviewCount,
+  };
+
+  const handleGrade = (grade: Grade) => {
+    if (!currentItem) return;
+    onGrade(currentItem.deckId, currentItem.card.id, grade);
     setStats((s) => ({
-      correct: s.correct + (correct ? 1 : 0),
-      wrong: s.wrong + (correct ? 0 : 1),
+      correct: s.correct + (grade === "again" ? 0 : 1),
+      wrong: s.wrong + (grade === "again" ? 1 : 0),
     }));
     setFlipped(false);
     setIdx((i) => i + 1);
@@ -88,8 +116,21 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
     setPhase("playing");
   };
 
+  // Preview intervals for each grade button (pure — doesn't mutate)
+  const previews = currentCard
+    ? (Object.fromEntries(
+        (["again", "hard", "good", "easy"] as Grade[]).map((g) => [
+          g,
+          sm2.preview(currentCard, g, now).label,
+        ]),
+      ) as Record<Grade, string>)
+    : null;
+
   // ── Setup screen ─────────────────────────────────────────────────────────────
   if (phase === "setup") {
+    // Show today's queue sizes to the user
+    const preview = buildQueue(practiceDecks, allDecks, Date.now());
+    const totalCards = practiceDecks.reduce((n, d) => n + d.cards.length, 0);
     return (
       <div className="animate-rise mx-auto max-w-xl">
         <button
@@ -98,70 +139,52 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
         >
           ← Back to decks
         </button>
-
         <div className="rounded-3xl border border-line bg-paper-2 p-5 shadow-sm sm:p-8">
           <h2 className="font-display text-2xl font-bold text-ink">
             {deck.name}
           </h2>
           <p className="mt-1 text-sm text-ink-soft">
-            {deck.cards.length} cards · {due.length} due · {fresh.length} new
+            {totalCards} card{totalCards !== 1 ? "s" : ""} total
           </p>
 
-          <div className="mt-6 space-y-5">
-            {/* Box filter */}
-            <div>
-              <p className="mb-2 text-sm font-medium text-ink">
-                Cards to study
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {(Object.keys(BOX_FILTER_LABELS) as BoxFilter[]).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setBoxFilter(f)}
-                    className={`rounded-xl border px-4 py-2.5 text-left text-sm transition ${
-                      boxFilter === f
-                        ? "border-accent-2 bg-accent-2/10 font-medium text-accent-2"
-                        : "border-line text-ink-soft hover:border-accent hover:text-ink"
-                    }`}
-                  >
-                    {BOX_FILTER_LABELS[f]}
-                  </button>
-                ))}
+          {/* Today's session breakdown */}
+          <div className="mt-5 grid grid-cols-3 gap-3">
+            {[
+              { label: "New", count: preview.newCount, color: "text-accent-2" },
+              {
+                label: "Learning",
+                count: preview.learningCount,
+                color: "text-ink-soft",
+              },
+              {
+                label: "Review",
+                count: preview.reviewCount,
+                color: "text-accent",
+              },
+            ].map(({ label, count, color }) => (
+              <div
+                key={label}
+                className="rounded-xl border border-line bg-paper px-3 py-2.5 text-center"
+              >
+                <p className={`text-xl font-bold ${color}`}>{count}</p>
+                <p className="text-xs text-ink-soft/70">{label}</p>
               </div>
-            </div>
-
-            {/* Session new-card limit */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-ink">
-                New cards this session
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="range"
-                  min={1}
-                  max={Math.max(50, deck.cards.length)}
-                  value={sessionLimit}
-                  onChange={(e) => setSessionLimit(Number(e.target.value))}
-                  className="flex-1 accent-accent-2"
-                />
-                <span className="w-10 text-right text-sm font-medium text-ink">
-                  {sessionLimit}
-                </span>
-              </div>
-              {deck.dailyLimit && (
-                <p className="mt-1 text-xs text-ink-soft/60">
-                  Deck default: {deck.dailyLimit}/day
-                </p>
-              )}
-            </div>
+            ))}
           </div>
+
+          <p className="mt-3 text-xs text-ink-soft/60">
+            Limits: {deck.config.newPerDay} new/day ·{" "}
+            {deck.config.maxReviewsPerDay} reviews/day
+          </p>
 
           <button
             onClick={start}
-            disabled={deck.cards.length === 0}
-            className="mt-8 w-full rounded-full bg-ink py-3 font-medium text-paper transition hover:bg-accent disabled:opacity-30"
+            disabled={preview.items.length === 0}
+            className="mt-6 w-full rounded-full bg-ink py-3 font-medium text-paper transition hover:bg-accent disabled:opacity-30"
           >
-            Start session
+            {preview.items.length === 0
+              ? "Nothing due today"
+              : `Start session · ${preview.items.length} cards`}
           </button>
         </div>
       </div>
@@ -179,7 +202,7 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
           <p className="mt-3 text-ink-soft">
             <span className="text-accent-2">{stats.correct} correct</span>
             {" · "}
-            <span className="text-accent">{stats.wrong} to review</span>
+            <span className="text-accent">{stats.wrong} again</span>
           </p>
           <div className="mt-6 flex justify-center gap-3">
             <button
@@ -205,20 +228,40 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
   // ── Playing screen ────────────────────────────────────────────────────────────
   return (
     <div className="animate-rise mx-auto max-w-xl">
-      <div className="mb-5 flex items-center justify-between">
+      {/* Top bar: back + counts */}
+      <div className="mb-4 flex items-center justify-between">
         <button
           onClick={onExit}
           className="text-sm text-ink-soft transition hover:text-accent"
         >
           ← Back
         </button>
-        <span className="text-sm text-ink-soft">
-          {Math.min(idx + 1, queue.length)} / {queue.length}
-        </span>
+        <div className="flex items-center gap-2 text-xs">
+          <span className="rounded-full bg-accent-2/20 px-2 py-0.5 text-accent-2">
+            {queueResult.newCount} new
+          </span>
+          <span className="rounded-full bg-paper-2 px-2 py-0.5 text-ink-soft">
+            {queueResult.learningCount} lrn
+          </span>
+          <span className="rounded-full bg-accent/10 px-2 py-0.5 text-accent">
+            {queueResult.reviewCount} rev
+          </span>
+          <span className="ml-1 text-ink-soft/60">
+            {Math.min(idx + 1, queue.length)}/{queue.length}
+          </span>
+        </div>
       </div>
 
-      {card ? (
+      {currentCard ? (
         <div>
+          {/* Card state badge */}
+          <div className="mb-2 flex justify-end">
+            <span className="rounded-full border border-line px-2 py-0.5 text-xs text-ink-soft/60 capitalize">
+              {currentItem?.card.state}
+            </span>
+          </div>
+
+          {/* Flashcard */}
           <button
             onClick={() => setFlipped((f) => !f)}
             className="block w-full"
@@ -234,11 +277,11 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
                 {flipped ? "Answer" : "Prompt"}
               </p>
               <p className="mt-3 font-display text-xl leading-snug text-ink sm:text-3xl">
-                {flipped ? card.back : card.front}
+                {flipped ? currentCard.back : currentCard.front}
               </p>
-              {flipped && card.examples.length > 0 && (
+              {flipped && currentCard.examples.length > 0 && (
                 <ul className="mt-5 space-y-1.5 text-left text-sm">
-                  {card.examples.slice(0, 3).map((ex, i) => (
+                  {currentCard.examples.slice(0, 3).map((ex, i) => (
                     <li key={i} className="text-ink-soft">
                       {ex.source}
                       {ex.target ? (
@@ -257,20 +300,23 @@ export default function Practice({ deck, onGrade, onExit }: Props) {
             </div>
           </button>
 
+          {/* 4-button grading row */}
           {flipped && (
-            <div className="mt-5 flex gap-3">
-              <button
-                onClick={() => grade(false)}
-                className="flex-1 rounded-full border border-accent bg-accent/10 py-3 font-medium text-accent transition hover:bg-accent/20"
-              >
-                Got it wrong
-              </button>
-              <button
-                onClick={() => grade(true)}
-                className="flex-1 rounded-full bg-accent-2 py-3 font-medium text-paper transition hover:opacity-90"
-              >
-                Got it right
-              </button>
+            <div className="mt-4 grid grid-cols-4 gap-2">
+              {GRADE_CONFIG.map(({ grade, label, className }) => (
+                <button
+                  key={grade}
+                  onClick={() => handleGrade(grade)}
+                  className={`flex flex-col items-center ${className} px-1`}
+                >
+                  <span>{label}</span>
+                  {previews && (
+                    <span className="mt-0.5 text-xs opacity-70">
+                      {previews[grade]}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
           )}
         </div>

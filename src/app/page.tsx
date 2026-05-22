@@ -45,6 +45,7 @@ export default function Home() {
       {practiceDeck ? (
         <Practice
           deck={practiceDeck}
+          allDecks={decks}
           onGrade={gradeCard}
           onExit={() => setPracticeId(null)}
         />
