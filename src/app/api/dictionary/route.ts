@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { DictionaryEntry, DictionaryPosGroup, DictionarySense } from "@/types";
 
+export const runtime = "edge";
+
 // ── External API shapes ───────────────────────────────────────────────────────
 
 interface FreeDictPhonetic {
@@ -197,5 +199,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return Response.json(entry);
+  return Response.json(entry, {
+    headers: { "Cache-Control": "public, max-age=3600, s-maxage=3600" },
+  });
 }

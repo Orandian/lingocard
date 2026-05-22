@@ -1,5 +1,10 @@
 import { NextRequest } from "next/server";
 
+// Edge runtime: runs on Vercel's edge network, not Fluid Compute.
+// Avoids the 8 CPU-hour/month Hobby limit — edge has a separate 500k req/month pool.
+// fetch() is fully supported in Edge runtime.
+export const runtime = "edge";
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const q = searchParams.get("q");
@@ -35,5 +40,7 @@ export async function GET(request: NextRequest) {
   }
 
   const data = await res.json();
-  return Response.json(data);
+  return Response.json(data, {
+    headers: { "Cache-Control": "public, max-age=300, s-maxage=300" },
+  });
 }
