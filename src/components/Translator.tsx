@@ -655,11 +655,11 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
 
       {/* ── Dictionary + alternatives panel ── */}
       {result &&
-        (result.dict?.length ||
+        !!(
+          result.dict?.length ||
           result.alternatives?.length ||
-          result.examples?.length) && (
-          <TranslationResultPanel result={result} />
-        )}
+          result.examples?.length
+        ) && <TranslationResultPanel result={result} />}
 
       {/* ── See dictionary toggle ── */}
       {hasTranslation && (
