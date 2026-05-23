@@ -195,7 +195,7 @@ export default function Practice({ deck, allDecks, onGrade, onExit }: Props) {
   if (done) {
     return (
       <div className="animate-rise mx-auto max-w-xl">
-        <div className="rounded-3xl border border-line bg-paper-2 p-6 text-center shadow-sm sm:p-10">
+        <div className="animate-scale-in rounded-3xl border border-line bg-paper-2 p-6 text-center shadow-sm sm:p-10">
           <p className="font-display text-2xl text-ink sm:text-3xl">
             Session complete
           </p>
@@ -253,7 +253,7 @@ export default function Practice({ deck, allDecks, onGrade, onExit }: Props) {
       </div>
 
       {currentCard ? (
-        <div>
+        <div key={idx} className="animate-slide-in-right">
           {/* Card state badge */}
           <div className="mb-2 flex justify-end">
             <span className="rounded-full border border-line px-2 py-0.5 text-xs text-ink-soft/60 capitalize">
@@ -261,53 +261,65 @@ export default function Practice({ deck, allDecks, onGrade, onExit }: Props) {
             </span>
           </div>
 
-          {/* Flashcard */}
+          {/* Flashcard — 3D flip */}
           <button
             onClick={() => setFlipped((f) => !f)}
             className="block w-full"
+            aria-pressed={flipped}
+            aria-label={flipped ? "Hide answer" : "Reveal answer"}
           >
-            <div
-              className={`flex min-h-[10rem] flex-col items-center justify-center rounded-3xl border p-5 text-center shadow-sm transition sm:min-h-[14rem] sm:p-8 ${
-                flipped
-                  ? "border-accent-2/40 bg-accent-2/5"
-                  : "border-line bg-paper-2"
-              }`}
-            >
-              <p className="text-xs uppercase tracking-widest text-ink-soft/50">
-                {flipped ? "Answer" : "Prompt"}
-              </p>
-              <p className="mt-3 font-display text-xl leading-snug text-ink sm:text-3xl">
-                {flipped ? currentCard.back : currentCard.front}
-              </p>
-              {flipped && currentCard.examples.length > 0 && (
-                <ul className="mt-5 space-y-1.5 text-left text-sm">
-                  {currentCard.examples.slice(0, 3).map((ex, i) => (
-                    <li key={i} className="text-ink-soft">
-                      {ex.source}
-                      {ex.target ? (
-                        <>
-                          <span className="mx-1 text-accent">→</span>
-                          {ex.target}
-                        </>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <p className="mt-5 text-xs text-ink-soft/50">
-                tap to {flipped ? "hide" : "reveal"}
-              </p>
+            <div className="flip-card-scene">
+              <div
+                className={`flip-card-body min-h-[10rem] sm:min-h-[14rem] ${flipped ? "is-flipped" : ""}`}
+              >
+                {/* Front face */}
+                <div className="flip-card-face flex min-h-[10rem] w-full flex-col items-center justify-center rounded-3xl border border-line bg-paper-2 p-5 text-center shadow-sm sm:min-h-[14rem] sm:p-8">
+                  <p className="text-xs uppercase tracking-widest text-ink-soft/50">
+                    Prompt
+                  </p>
+                  <p className="mt-3 font-display text-xl leading-snug text-ink sm:text-3xl">
+                    {currentCard.front}
+                  </p>
+                  <p className="mt-5 text-xs text-ink-soft/50">tap to reveal</p>
+                </div>
+
+                {/* Back face */}
+                <div className="flip-card-face flip-card-face--back flex min-h-[10rem] w-full flex-col items-center justify-center rounded-3xl border border-accent-2/40 bg-accent-2/5 p-5 text-center shadow-sm sm:min-h-[14rem] sm:p-8">
+                  <p className="text-xs uppercase tracking-widest text-ink-soft/50">
+                    Answer
+                  </p>
+                  <p className="mt-3 font-display text-xl leading-snug text-ink sm:text-3xl">
+                    {currentCard.back}
+                  </p>
+                  {currentCard.examples.length > 0 && (
+                    <ul className="mt-5 space-y-1.5 text-left text-sm">
+                      {currentCard.examples.slice(0, 3).map((ex, i) => (
+                        <li key={i} className="text-ink-soft">
+                          {ex.source}
+                          {ex.target ? (
+                            <>
+                              <span className="mx-1 text-accent">→</span>
+                              {ex.target}
+                            </>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="mt-5 text-xs text-ink-soft/50">tap to hide</p>
+                </div>
+              </div>
             </div>
           </button>
 
           {/* 4-button grading row */}
           {flipped && (
-            <div className="mt-4 grid grid-cols-4 gap-2">
+            <div className="mt-4 grid grid-cols-4 gap-2 animate-rise">
               {GRADE_CONFIG.map(({ grade, label, className }) => (
                 <button
                   key={grade}
                   onClick={() => handleGrade(grade)}
-                  className={`flex flex-col items-center ${className} px-1`}
+                  className={`flex flex-col items-center ${className} px-1 active:scale-95`}
                 >
                   <span>{label}</span>
                   {previews && (

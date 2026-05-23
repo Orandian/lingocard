@@ -112,9 +112,122 @@ body::before {
   animation: flip-in 0.35s ease both;
 }
 
+/* scale-in: gentle scale up + fade — for panels, confirmations, completion screens */
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* soft-pulse: single gentle throb for success feedback */
+@keyframes soft-pulse {
+  0%   { transform: scale(1);    }
+  45%  { transform: scale(1.06); }
+  100% { transform: scale(1);    }
+}
+
+.animate-soft-pulse {
+  animation: soft-pulse 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* slide-in-right: incoming card slides from right */
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* shimmer: horizontal gradient sweep for loading placeholders */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-paper-2) 25%,
+    var(--color-line)    50%,
+    var(--color-paper-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+/* ── Default interactive element transitions ─────────────────────────────── */
+
+button:not([disabled]),
+[role="button"]:not([disabled]) {
+  transition-property: color, background-color, border-color, transform, opacity;
+  transition-duration: 180ms;
+  transition-timing-function: ease;
+}
+
+/* ── Expand/collapse via CSS grid rows ───────────────────────────────────── */
+
+.deck-expand-grid {
+  display: grid;
+  transition: grid-template-rows 200ms ease-out;
+}
+
+.deck-expand-grid[data-open="true"]  { grid-template-rows: 1fr; }
+.deck-expand-grid[data-open="false"] { grid-template-rows: 0fr; }
+
+.deck-expand-grid > .deck-expand-inner {
+  overflow: hidden;
+}
+
+/* ── 3D flip card ────────────────────────────────────────────────────────── */
+
+.flip-card-scene {
+  perspective: 1000px;
+}
+
+.flip-card-body {
+  position: relative;
+  transition: transform 300ms ease-in-out;
+  transform-style: preserve-3d;
+}
+
+.flip-card-body.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flip-card-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flip-card-face--back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}
+
+/* ── Deck row delete exit animation ─────────────────────────────────────── */
+
+@keyframes fade-shrink {
+  from { opacity: 1; transform: scale(1);    max-height: 200px; }
+  to   { opacity: 0; transform: scale(0.97); max-height: 0;     }
+}
+
+.animate-fade-shrink {
+  animation: fade-shrink 0.15s ease-out forwards;
+  overflow: hidden;
+}
+
+/* ── prefers-reduced-motion — neutralise everything ─────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

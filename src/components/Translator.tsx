@@ -114,6 +114,7 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
   const [dictCache, setDictCache] = useState<Record<string, DictionaryEntry>>(
     {},
   );
+  const [swapRotated, setSwapRotated] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -183,6 +184,7 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
       setText(result.translation);
       setResult(null);
     }
+    setSwapRotated((v) => !v);
   };
 
   const clear = () => {
@@ -380,9 +382,12 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
             disabled={sourceLang === "auto"}
             title="Swap languages"
             aria-label="Swap languages"
-            className="shrink-0 border-x border-line px-3 text-ink-soft/60 transition-colors hover:text-accent disabled:cursor-not-allowed disabled:opacity-30"
+            className="shrink-0 border-x border-line px-3 text-ink-soft/60 transition-colors hover:text-accent disabled:cursor-not-allowed disabled:opacity-30 active:scale-90"
           >
-            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
+            <svg
+              viewBox="0 0 24 24"
+              className={`h-5 w-5 fill-current transition-transform duration-300 ${swapRotated ? "rotate-180" : "rotate-0"}`}
+            >
               <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" />
             </svg>
           </button>
@@ -472,9 +477,12 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
             disabled={sourceLang === "auto"}
             title="Swap languages"
             aria-label="Swap languages"
-            className="flex flex-shrink-0 items-center justify-center px-3 text-ink-soft/60 transition-colors hover:text-accent disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex flex-shrink-0 items-center justify-center px-3 text-ink-soft/60 transition-colors hover:text-accent disabled:cursor-not-allowed disabled:opacity-30 active:scale-90"
           >
-            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
+            <svg
+              viewBox="0 0 24 24"
+              className={`h-5 w-5 fill-current transition-transform duration-300 ${swapRotated ? "rotate-180" : "rotate-0"}`}
+            >
               <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" />
             </svg>
           </button>
@@ -594,13 +602,24 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
             {/* Translation output */}
             <div className="flex-1 p-5 pb-2">
               {loading ? (
-                <p className="animate-pulse text-xl text-ink-soft/60">
-                  Translating…
-                </p>
+                <div
+                  aria-label="Translating…"
+                  role="status"
+                  className="space-y-3 pt-1"
+                >
+                  <div className="animate-shimmer h-6 w-4/5 rounded-full" />
+                  <div
+                    className="animate-shimmer h-5 w-3/5 rounded-full"
+                    style={{ animationDelay: "80ms" }}
+                  />
+                </div>
               ) : error ? (
                 <p className="text-sm text-red-500">{error}</p>
               ) : result?.translation ? (
-                <p className="whitespace-pre-wrap text-lg leading-relaxed text-accent sm:text-xl">
+                <p
+                  key={result.translation}
+                  className="animate-scale-in whitespace-pre-wrap text-lg leading-relaxed text-accent sm:text-xl"
+                >
                   {result.translation}
                 </p>
               ) : (
@@ -633,7 +652,7 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
                 disabled={!result?.translation}
                 title={copied ? "Copied!" : "Copy translation"}
                 aria-label={copied ? "Copied!" : "Copy translation"}
-                className={`rounded-full p-1.5 transition-colors hover:bg-paper-2 disabled:cursor-default disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                className={`rounded-full p-1.5 transition-colors hover:bg-paper-2 disabled:cursor-default disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-90 ${
                   copied ? "text-accent" : "text-ink-soft hover:text-accent"
                 }`}
               >
@@ -646,7 +665,7 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
                 aria-label={
                   starred ? "Saved to Favorites" : "Save to Favorites"
                 }
-                className={`rounded-full p-1.5 transition-colors hover:bg-paper-2 disabled:cursor-default disabled:opacity-30 ${
+                className={`rounded-full p-1.5 transition-colors hover:bg-paper-2 disabled:cursor-default disabled:opacity-30 active:scale-90 ${
                   starred
                     ? "text-yellow-500"
                     : "text-ink-soft hover:text-yellow-500"
@@ -754,7 +773,11 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
             + New deck
           </button>
           {savedMsg && (
-            <span className="text-xs text-green-600" role="status">
+            <span
+              key={savedMsg}
+              className="animate-scale-in text-xs text-green-600"
+              role="status"
+            >
               {savedMsg}
             </span>
           )}
@@ -932,10 +955,10 @@ function TranslationResultPanel({ result }: { result: TranslationResult }) {
   const hasExamples = (result.examples?.length ?? 0) > 0;
 
   return (
-    <div className="mt-3 overflow-hidden rounded-2xl border border-line bg-paper shadow-sm">
+    <div className="animate-scale-in mt-3 overflow-hidden rounded-2xl border border-line bg-paper shadow-sm">
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center justify-between px-5 py-3 text-left hover:bg-paper-2"
+        className="flex w-full items-center justify-between px-5 py-3 text-left hover:bg-paper-2 active:scale-95 transition-transform duration-100"
       >
         <span className="text-sm font-medium text-ink">
           {hasDict ? "Dictionary" : hasAlts ? "More translations" : "Examples"}
@@ -948,76 +971,84 @@ function TranslationResultPanel({ result }: { result: TranslationResult }) {
         </svg>
       </button>
 
-      {expanded && (
-        <div className="space-y-5 border-t border-line/50 px-5 py-4">
-          {/* Dictionary by part of speech */}
-          {hasDict &&
-            result.dict!.map((entry: DictEntry, i: number) => (
-              <div key={i}>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-soft/60">
-                  {entry.pos}
-                </p>
-                <div className="space-y-2">
-                  {entry.words.map((w, j) => (
-                    <div key={j} className="flex items-start gap-3">
-                      <span className="min-w-[80px] text-sm font-medium text-accent sm:min-w-[130px]">
-                        {w.word}
-                      </span>
-                      {w.reverseTranslation.length > 0 && (
-                        <span className="text-sm text-ink-soft">
-                          {w.reverseTranslation.join(", ")}
-                        </span>
-                      )}
+      <div className="deck-expand-grid" data-open={expanded ? "true" : "false"}>
+        <div className="deck-expand-inner">
+          {true && (
+            <div className="space-y-5 border-t border-line/50 px-5 py-4">
+              {/* Dictionary by part of speech */}
+              {hasDict &&
+                result.dict!.map((entry: DictEntry, i: number) => (
+                  <div key={i}>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-soft/60">
+                      {entry.pos}
+                    </p>
+                    <div className="space-y-2">
+                      {entry.words.map((w, j) => (
+                        <div key={j} className="flex items-start gap-3">
+                          <span className="min-w-[80px] text-sm font-medium text-accent sm:min-w-[130px]">
+                            {w.word}
+                          </span>
+                          {w.reverseTranslation.length > 0 && (
+                            <span className="text-sm text-ink-soft">
+                              {w.reverseTranslation.join(", ")}
+                            </span>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-
-          {/* Alternative translations */}
-          {hasAlts && (
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-soft/60">
-                More translations
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {result.alternatives!.map(
-                  (alt: AlternativeTranslation, i: number) => (
-                    <span
-                      key={i}
-                      className="rounded-full border border-line bg-paper-2 px-3 py-1 text-sm text-ink"
-                    >
-                      {alt.word}
-                      {alt.score > 0.1 && (
-                        <span className="ml-1.5 text-xs text-ink-soft/60">
-                          {Math.round(alt.score * 100)}%
-                        </span>
-                      )}
-                    </span>
-                  ),
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Example sentences */}
-          {hasExamples && (
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-soft/60">
-                Examples
-              </p>
-              <ul className="space-y-2">
-                {result.examples.map((ex, i) => (
-                  <li key={i} className="text-sm text-ink-soft">
-                    <span className="mr-2 text-ink-soft/40">›</span>
-                    {ex.source}
-                  </li>
+                  </div>
                 ))}
-              </ul>
+
+              {/* Alternative translations */}
+              {hasAlts && (
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-soft/60">
+                    More translations
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {result.alternatives!.map(
+                      (alt: AlternativeTranslation, i: number) => (
+                        <span
+                          key={i}
+                          className="rounded-full border border-line bg-paper-2 px-3 py-1 text-sm text-ink"
+                        >
+                          {alt.word}
+                          {alt.score > 0.1 && (
+                            <span className="ml-1.5 text-xs text-ink-soft/60">
+                              {Math.round(alt.score * 100)}%
+                            </span>
+                          )}
+                        </span>
+                      ),
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Example sentences */}
+              {hasExamples && (
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-soft/60">
+                    Examples
+                  </p>
+                  <ul className="space-y-2">
+                    {result.examples.map((ex, i) => (
+                      <li
+                        key={i}
+                        className="animate-rise text-sm text-ink-soft"
+                        style={{ animationDelay: `${i * 40}ms` }}
+                      >
+                        <span className="mr-2 text-ink-soft/40">›</span>
+                        {ex.source}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
