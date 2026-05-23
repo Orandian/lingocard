@@ -716,41 +716,27 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
         </div>
       )}
 
-      {/* ── Dictionary drawer (right-side slide-in) ── */}
+      {/* ── Dictionary panel (inline, below result) ── */}
       {dictOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-ink/20 backdrop-blur-[1px]"
-            onClick={() => setDictOpen(false)}
-            aria-hidden="true"
-          />
-          <div
-            className={`fixed right-0 top-0 z-50 h-full w-full max-w-sm overflow-y-auto bg-paper shadow-2xl transition-transform duration-300 ${
-              dictOpen ? "translate-x-0" : "translate-x-full"
-            }`}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Dictionary"
-          >
-            {dictLoading ? (
-              <p className="p-5 text-sm text-ink-soft/60 animate-pulse">
-                Loading dictionary…
-              </p>
-            ) : dictEntry ? (
-              <DictionaryPanel
-                entry={dictEntry}
-                headword={text.trim()}
-                sourceLang={
-                  sourceLang === "auto"
-                    ? (result?.detectedLang ?? "en")
-                    : sourceLang
-                }
-                onAddCard={saveWithCustomBack}
-                onClose={() => setDictOpen(false)}
-              />
-            ) : null}
-          </div>
-        </>
+        <div className="mt-3 animate-scale-in overflow-hidden rounded-2xl border border-line bg-paper shadow-sm">
+          {dictLoading ? (
+            <p className="p-5 text-sm text-ink-soft/60 animate-pulse">
+              Loading dictionary…
+            </p>
+          ) : dictEntry ? (
+            <DictionaryPanel
+              entry={dictEntry}
+              headword={text.trim()}
+              sourceLang={
+                sourceLang === "auto"
+                  ? (result?.detectedLang ?? "en")
+                  : sourceLang
+              }
+              onAddCard={saveWithCustomBack}
+              onClose={() => setDictOpen(false)}
+            />
+          ) : null}
+        </div>
       )}
 
       {/* ── Save-to-deck row — shown only when there is a translation result ── */}
