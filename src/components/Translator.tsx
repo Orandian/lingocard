@@ -594,7 +594,7 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
               ) : error ? (
                 <p className="text-sm text-red-500">{error}</p>
               ) : result?.translation ? (
-                <p className="text-lg leading-relaxed text-accent sm:text-xl">
+                <p className="whitespace-pre-wrap text-lg leading-relaxed text-accent sm:text-xl">
                   {result.translation}
                 </p>
               ) : (
