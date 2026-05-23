@@ -57,7 +57,7 @@ export default function DictionaryPanel({
 
   return (
     <div
-      className="flex h-full min-h-screen flex-col"
+      className="flex flex-col"
       role="region"
       aria-label={`Dictionary entry for ${headword}`}
     >
