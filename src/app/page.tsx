@@ -29,7 +29,7 @@ export default function Home() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
-      <header className="mb-6 flex items-start justify-between gap-4 sm:mb-8">
+      <header className="mb-6 flex items-start justify-between gap-4 sm:mb-8 animate-rise">
         <div>
           <h1 className="font-display text-3xl font-black tracking-tight text-ink sm:text-4xl">
             Lingo<span className="text-accent">Card</span>
@@ -65,21 +65,25 @@ export default function Home() {
 
           {!ready ? (
             <p className="text-ink-soft">Loading…</p>
-          ) : tab === "translate" ? (
-            <Translator
-              decks={decks}
-              onCreateDeck={createDeck}
-              onAddCard={addCard}
-            />
           ) : (
-            <DeckManager
-              decks={decks}
-              onCreateDeck={createDeck}
-              onDeleteDeck={deleteDeck}
-              onDeleteCard={deleteCard}
-              onSetLimit={setDeckLimit}
-              onPractice={(id) => setPracticeId(id)}
-            />
+            <div key={tab} className="animate-rise">
+              {tab === "translate" ? (
+                <Translator
+                  decks={decks}
+                  onCreateDeck={createDeck}
+                  onAddCard={addCard}
+                />
+              ) : (
+                <DeckManager
+                  decks={decks}
+                  onCreateDeck={createDeck}
+                  onDeleteDeck={deleteDeck}
+                  onDeleteCard={deleteCard}
+                  onSetLimit={setDeckLimit}
+                  onPractice={(id) => setPracticeId(id)}
+                />
+              )}
+            </div>
           )}
         </>
       )}
@@ -163,7 +167,7 @@ function TabBtn({
   return (
     <button
       onClick={onClick}
-      className={`rounded-full px-5 py-2 text-sm font-medium transition ${
+      className={`rounded-full px-5 py-2 text-sm font-medium transition-colors duration-150 active:scale-95 ${
         active ? "bg-ink text-paper" : "text-ink-soft hover:text-ink"
       }`}
     >

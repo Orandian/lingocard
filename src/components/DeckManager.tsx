@@ -74,6 +74,7 @@ export default function DeckManager({
   const [open, setOpen] = useState<string | null>(null);
   const [statsFor, setStatsFor] = useState<string | null>(null);
   const [deckPage, setDeckPage] = useState(0);
+  const [newDeckId, setNewDeckId] = useState<string | null>(null);
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     tags: true,
     reversed: false,
@@ -119,7 +120,13 @@ export default function DeckManager({
                 setNameError(true);
                 return;
               }
-              onCreateDeck(newName);
+              const deck = onCreateDeck(newName) as unknown as {
+                id?: string;
+              } | void;
+              if (deck && typeof deck === "object" && "id" in deck) {
+                setNewDeckId((deck as { id: string }).id);
+                setTimeout(() => setNewDeckId(null), 600);
+              }
               setNewName("");
               setNameError(false);
             }}
@@ -135,11 +142,17 @@ export default function DeckManager({
                 setNameError(true);
                 return;
               }
-              onCreateDeck(newName);
+              const deck = onCreateDeck(newName) as unknown as {
+                id?: string;
+              } | void;
+              if (deck && typeof deck === "object" && "id" in deck) {
+                setNewDeckId((deck as { id: string }).id);
+                setTimeout(() => setNewDeckId(null), 600);
+              }
               setNewName("");
               setNameError(false);
             }}
-            className="rounded-full bg-ink px-5 py-2 text-sm font-medium text-paper transition hover:bg-accent"
+            className="rounded-full bg-ink px-5 py-2 text-sm font-medium text-paper transition-colors duration-150 hover:bg-accent active:scale-95"
           >
             Create
           </button>
@@ -189,7 +202,10 @@ export default function DeckManager({
       <div className="space-y-4">
         {visibleItems.map((item) =>
           item.type === "standalone" ? (
-            <div key={item.deck.id}>
+            <div
+              key={item.deck.id}
+              className={newDeckId === item.deck.id ? "animate-scale-in" : ""}
+            >
               <DeckRow
                 deck={item.deck}
                 allDecks={decks}
@@ -380,6 +396,7 @@ function DeckRow({
   const [editLimit, setEditLimit] = useState(false);
   const [limitVal, setLimitVal] = useState(String(deck.dailyLimit ?? ""));
   const [cardPage, setCardPage] = useState(0);
+  const [deletingCards, setDeletingCards] = useState<Set<string>>(new Set());
 
   const isOpen = open === deck.id;
   const showStats = statsFor === deck.id;
@@ -402,6 +419,18 @@ function DeckRow({
     setEditLimit(false);
   };
 
+  const handleDeleteCard = (cardId: string) => {
+    setDeletingCards((prev) => new Set(prev).add(cardId));
+    setTimeout(() => {
+      onDeleteCard(deck.id, cardId);
+      setDeletingCards((prev) => {
+        const next = new Set(prev);
+        next.delete(cardId);
+        return next;
+      });
+    }, 150);
+  };
+
   return (
     <div
       className={
@@ -411,7 +440,7 @@ function DeckRow({
       <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
         <button
           onClick={() => setOpen(isOpen ? null : deck.id)}
-          className="text-left sm:flex-1"
+          className="text-left transition-colors duration-150 sm:flex-1 hover:text-accent"
         >
           <h3 className="font-display text-xl text-ink">
             {label ?? deck.name}
@@ -448,13 +477,13 @@ function DeckRow({
               />
               <button
                 onClick={commitLimit}
-                className="rounded-full bg-accent-2 px-2 py-1 text-xs text-paper"
+                className="rounded-full bg-accent-2 px-2 py-1 text-xs text-paper active:scale-95"
               >
                 ✓
               </button>
               <button
                 onClick={() => setEditLimit(false)}
-                className="rounded-full border border-line px-2 py-1 text-xs text-ink-soft"
+                className="rounded-full border border-line px-2 py-1 text-xs text-ink-soft active:scale-95"
               >
                 ✕
               </button>
@@ -466,7 +495,7 @@ function DeckRow({
                 setEditLimit(true);
               }}
               title="Set daily new-card limit"
-              className="rounded-full border border-line px-3 py-2.5 text-sm text-ink-soft transition hover:border-accent hover:text-accent sm:py-1.5"
+              className="rounded-full border border-line px-3 py-2.5 text-sm text-ink-soft transition-colors duration-150 hover:border-accent hover:text-accent active:scale-95 sm:py-1.5"
             >
               {deck.dailyLimit ? `${deck.dailyLimit}/day` : "Limit"}
             </button>
@@ -474,7 +503,7 @@ function DeckRow({
 
           <button
             onClick={() => setStatsFor(showStats ? null : deck.id)}
-            className={`rounded-full border px-3 py-2.5 text-sm transition sm:py-1.5 ${showStats ? "border-accent text-accent" : "border-line text-ink-soft hover:border-accent hover:text-accent"}`}
+            className={`rounded-full border px-3 py-2.5 text-sm transition-colors duration-150 active:scale-95 sm:py-1.5 ${showStats ? "border-accent text-accent" : "border-line text-ink-soft hover:border-accent hover:text-accent"}`}
           >
             Stats
           </button>
@@ -482,20 +511,20 @@ function DeckRow({
           <button
             onClick={() => onPractice(deck.id)}
             disabled={deck.cards.length === 0}
-            className="rounded-full bg-accent-2 px-3 py-2.5 text-sm font-medium text-paper transition hover:opacity-90 disabled:opacity-30 sm:py-1.5"
+            className="rounded-full bg-accent-2 px-3 py-2.5 text-sm font-medium text-paper transition-opacity duration-150 hover:opacity-90 disabled:opacity-30 active:scale-95 sm:py-1.5"
           >
             Practice
           </button>
           <button
             onClick={() => downloadDeck(deck, exportOptions)}
             disabled={deck.cards.length === 0}
-            className="rounded-full border border-line px-3 py-2.5 text-sm transition hover:border-accent hover:text-accent disabled:opacity-30 sm:py-1.5"
+            className="rounded-full border border-line px-3 py-2.5 text-sm transition-colors duration-150 hover:border-accent hover:text-accent disabled:opacity-30 active:scale-95 sm:py-1.5"
           >
             Export
           </button>
           <button
             onClick={() => onRequestDelete(deck.id, label ?? deck.name)}
-            className="rounded-full border border-line px-3 py-2.5 text-sm text-ink-soft transition hover:border-red-400 hover:text-red-500 sm:py-1.5"
+            className="rounded-full border border-line px-3 py-2.5 text-sm text-ink-soft transition-colors duration-150 hover:border-red-400 hover:text-red-500 active:scale-95 sm:py-1.5"
           >
             Delete
           </button>
@@ -504,7 +533,7 @@ function DeckRow({
 
       {/* Stats panel */}
       {showStats && (
-        <div className="border-t border-line/50 px-4 pb-4">
+        <div className="animate-scale-in border-t border-line/50 px-4 pb-4">
           <DeckStats
             deck={deck}
             allDecks={allDecks}
@@ -513,14 +542,19 @@ function DeckRow({
         </div>
       )}
 
-      {/* Card list */}
-      {isOpen && deck.cards.length > 0 && (
-        <div className="border-t border-line">
+      {/* Card list — animated expand/collapse */}
+      <div
+        className="deck-expand-grid"
+        data-open={isOpen && deck.cards.length > 0 ? "true" : "false"}
+      >
+        <div className="deck-expand-inner border-t border-line">
           <ul>
             {visibleCards.map((card) => (
               <li
                 key={card.id}
-                className="flex items-start justify-between gap-4 border-b border-line/50 px-4 py-3 last:border-0"
+                className={`flex items-start justify-between gap-4 border-b border-line/50 px-4 py-3 last:border-0 ${
+                  deletingCards.has(card.id) ? "animate-fade-shrink" : ""
+                }`}
               >
                 <div className="min-w-0">
                   <p className="text-ink">
@@ -537,8 +571,8 @@ function DeckRow({
                   </p>
                 </div>
                 <button
-                  onClick={() => onDeleteCard(deck.id, card.id)}
-                  className="shrink-0 text-sm text-ink-soft/60 transition hover:text-accent"
+                  onClick={() => handleDeleteCard(card.id)}
+                  className="shrink-0 text-sm text-ink-soft/60 transition-colors duration-150 hover:text-accent active:scale-90"
                 >
                   ✕
                 </button>
@@ -556,7 +590,7 @@ function DeckRow({
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
