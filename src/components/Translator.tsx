@@ -239,10 +239,12 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
 
   const save = (deckId: string) => {
     if (!result) return;
+    const resolvedSource =
+      sourceLang === "auto" ? (result.detectedLang ?? "en") : sourceLang;
     const added = onAddCard(deckId, {
       front: text.trim(),
       back: result.translation,
-      sourceLang,
+      sourceLang: resolvedSource,
       targetLang,
       examples: result.examples,
     });
@@ -255,7 +257,9 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
 
   const saveToNew = () => {
     if (!result) return;
-    const deck = onCreateDeck(`${sourceLang}→${targetLang}`);
+    const resolvedSource =
+      sourceLang === "auto" ? (result.detectedLang ?? "en") : sourceLang;
+    const deck = onCreateDeck(`${resolvedSource}→${targetLang}`);
     save(deck.id);
   };
 
@@ -263,10 +267,12 @@ export default function Translator({ decks, onCreateDeck, onAddCard }: Props) {
   const saveWithCustomBack = (back: string) => {
     const fav =
       decks.find((d) => d.name === "Favorites") ?? onCreateDeck("Favorites");
+    const resolvedSource =
+      sourceLang === "auto" ? (result?.detectedLang ?? "en") : sourceLang;
     const added = onAddCard(fav.id, {
       front: text.trim(),
       back,
-      sourceLang,
+      sourceLang: resolvedSource,
       targetLang,
       examples: result?.examples ?? [],
     });

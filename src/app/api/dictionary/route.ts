@@ -165,6 +165,11 @@ export async function GET(request: NextRequest) {
 
   if (!word) return Response.json({ error: "Missing word" }, { status: 400 });
 
+  const VALID_LANG = /^[a-z]{2,3}(-[A-Z]{2,4})?$/;
+  if (!VALID_LANG.test(source) || !VALID_LANG.test(target)) {
+    return Response.json({ error: "Invalid language code" }, { status: 400 });
+  }
+
   const entry: DictionaryEntry = {};
 
   // Always fetch MyMemory alternatives (works for every language pair)
